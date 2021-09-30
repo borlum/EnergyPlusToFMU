@@ -348,7 +348,7 @@ int create_res(ModelInstance *_c)
 	// The 30 are for the additional characters in tmp_str
 	tmp_str=(char*)(_c->functions->allocateMemory(strlen(_c->fmuOutput) + 30, sizeof(char)));
 
-	sprintf(tmp_str, "mkdir %s%s%s", "\"", _c->fmuOutput, "\"");
+	sprintf(tmp_str, "mkdir -p %s%s%s", "\"", _c->fmuOutput, "\"");
 	retVal=system (tmp_str);
 	_c->functions->freeMemory (tmp_str);
 	return retVal;
@@ -693,7 +693,10 @@ int getResourceLocation(ModelInstance *_c, fmi2String fmuLocation)
 	}
 
 	// Add back slash so we can copy files to the fmuUnzipLocation folder afterwards
-	sprintf(_c->fmuUnzipLocation, "%s%s", _c->fmuUnzipLocation, PATH_SEP);
+	//sprintf(_c->fmuUnzipLocation, "%s%s", _c->fmuUnzipLocation, PATH_SEP);
+	// Remove resources folder from path
+	_c->fmuUnzipLocation[strlen(_c->fmuUnzipLocation)-strlen("/resources")] = '\0';
+
 	_c->functions->logger(_c->componentEnvironment, _c->instanceName, fmi2OK, "ok",
 		"fmi2Instantiate: Path to fmuUnzipLocation %s\n", _c->fmuUnzipLocation);
 
@@ -701,7 +704,8 @@ int getResourceLocation(ModelInstance *_c, fmi2String fmuLocation)
 	_c->fmuResourceLocation = (char *)_c->functions->allocateMemory(strlen(_c->fmuUnzipLocation)
 		+ strlen(RESOURCES) + strlen(PATH_SEP) + 1, sizeof(char));
 
-	sprintf(_c->fmuResourceLocation, "%s%s%s", _c->fmuUnzipLocation, RESOURCES, PATH_SEP);
+	// Define fmuResourceLocation by adding resources folder to path of unzip location
+	sprintf(_c->fmuResourceLocation, "%s/resources/", _c->fmuUnzipLocation);
 	_c->functions->logger(_c->componentEnvironment, _c->instanceName, fmi2OK, "ok",
 		"fmi2Instantiate: Path to fmuResourceLocation %s\n", _c->fmuResourceLocation);
 	return 0;
@@ -811,7 +815,7 @@ DllExport fmi2Component fmi2Instantiate(fmi2String instanceName,
 	// create the output folder for current FMU in working directory
 	_c->fmuOutput=(char *)_c->functions->allocateMemory(strlen ("Output_EPExport_") + strlen (_c->instanceName)
 		+ strlen (_c->cwd) + 5, sizeof(char));
-	sprintf(_c->fmuOutput, "%s%s%s%s", _c->cwd, PATH_SEP, "Output_EPExport_", _c->instanceName);
+	sprintf(_c->fmuOutput, "%s%s%s%s", _c->cwd, "/", "Output_EPExport_", _c->instanceName);
 
 	// check if directory exists and deletes it
 	errDir=stat(_c->fmuOutput, &st);
@@ -864,7 +868,7 @@ DllExport fmi2Component fmi2Instantiate(fmi2String instanceName,
 	}
 	
 	// add the end slash to the fmuOutput
-	sprintf(_c->fmuOutput, "%s%s", _c->fmuOutput, PATH_SEP);
+	//sprintf(_c->fmuOutput, "%s%s", _c->fmuOutput, PATH_SEP);
 	
 	// copy the variables cfg into the output directory
 	retVal=copy_var_cfg(_c);
@@ -893,7 +897,9 @@ DllExport fmi2Component fmi2Instantiate(fmi2String instanceName,
 	
 	// create path to xml file
 	_c->xml_file=(char *)_c->functions->allocateMemory(strlen (_c->fmuUnzipLocation) + strlen (XML_FILE) + 1, sizeof(char));
-	sprintf(_c->xml_file, "%s%s", _c->fmuUnzipLocation, XML_FILE);
+
+
+	sprintf(_c->xml_file, "%s/%s", _c->fmuUnzipLocation, XML_FILE);
 	_c->functions->logger(_c->componentEnvironment, _c->instanceName, fmi2OK, "ok",
 		"fmi2Instantiate: Path to model description file is %s.\n", _c->xml_file);
 	
@@ -1216,7 +1222,7 @@ DllExport fmi2Status fmi2EnterInitializationMode(fmi2Component c)
 
 	if (_c->wea_file != NULL){
 		cmdstr = (char *)_c->functions->allocateMemory(strlen(_c->fmuResourceLocation) + strlen(command) + 10, sizeof(char));
-		sprintf(cmdstr, "%s%s", _c->fmuResourceLocation, command);
+		sprintf(cmdstr, "%s/%s", _c->fmuResourceLocation, command);
 		//Make file executable if UNIX
 #ifndef _MSC_VER
 		cmdstrEXE = (char *)_c->functions->allocateMemory(strlen(cmdstr) + 10, sizeof(char));
