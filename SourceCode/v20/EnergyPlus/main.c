@@ -695,7 +695,7 @@ int getResourceLocation(ModelInstance *_c, fmi2String fmuLocation)
 	// Add back slash so we can copy files to the fmuUnzipLocation folder afterwards
 	//sprintf(_c->fmuUnzipLocation, "%s%s", _c->fmuUnzipLocation, PATH_SEP);
 	// Remove resources folder from path
-	_c->fmuUnzipLocation[strlen(_c->fmuUnzipLocation)-strlen("/resources")] = '\0';
+	//_c->fmuUnzipLocation[strlen(_c->fmuUnzipLocation)-strlen("/resources")] = '\0';
 
 	_c->functions->logger(_c->componentEnvironment, _c->instanceName, fmi2OK, "ok",
 		"fmi2Instantiate: Path to fmuUnzipLocation %s\n", _c->fmuUnzipLocation);
